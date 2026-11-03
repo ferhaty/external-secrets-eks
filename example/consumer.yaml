@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: checkout-demo
+  namespace: shop-secrets-demo
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-demo
+  namespace: shop-secrets-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: checkout-demo
+  template:
+    metadata:
+      labels:
+        app: checkout-demo
+    spec:
+      serviceAccountName: checkout-demo
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: consumer
+          image: busybox:1.37.0
+          command: ["sleep", "2147483647"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
+          env:
+            - name: CHECKOUT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: checkout-credentials
+                  key: api-key
+          volumeMounts:
+            - name: credentials
+              mountPath: /run/checkout
+              readOnly: true
+      volumes:
+        - name: credentials
+          secret:
+            secretName: checkout-credentials
+            defaultMode: 0440

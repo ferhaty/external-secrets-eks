@@ -1,0 +1,28 @@
+# Terraform working data and local inputs; keep dependency locks.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+
+# Credentials and local secret material.
+.env
+.env.*
+*.secret.json
+*.pem
+*.key
+.aws/
+.kube/
+*kubeconfig*
+credentials
+
+# Local tooling and generated output.
+.DS_Store
+__pycache__/
+*.pyc

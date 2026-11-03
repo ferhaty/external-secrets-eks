@@ -1,0 +1,32 @@
+fullnameOverride: eso-shop
+controllerClass: shop-demo
+scopedNamespace: shop-secrets-demo
+scopedRBAC: true
+installCRDs: true
+processClusterStore: false
+processClusterExternalSecret: false
+processClusterGenerator: false
+processClusterPushSecret: false
+processPushSecret: false
+crds:
+  annotations:
+    helm.sh/resource-policy: keep
+  createClusterSecretStore: false
+  createClusterExternalSecret: false
+  createClusterGenerator: false
+  createClusterPushSecret: false
+  createPushSecret: false
+serviceAccount:
+  create: true
+  name: eso-shop
+  annotations: {}
+rbac:
+  serviceAccountTokenCreate: false
+  servicebindings:
+    create: false
+  aggregateToView: false
+  aggregateToEdit: false
+  aggregateToAdmin: false
+extraEnv:
+  - name: AWS_EC2_METADATA_DISABLED
+    value: "true"
