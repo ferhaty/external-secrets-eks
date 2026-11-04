@@ -6,14 +6,14 @@ Synchronize an AWS Secrets Manager value into Kubernetes with External Secrets O
 
 ## Prerequisites
 
-For local checks: Bash, Terraform >= 1.9 and < 2.0, and access to the locked AWS provider package. For the walkthrough: AWS CLI, kubectl, Helm 3, an existing EKS cluster with its IAM OIDC provider, an approved deployment identity and an owner-managed **dedicated demo secret** in the same AWS account and region. A customer-managed KMS key also needs a key policy that permits the reader role.
+For local checks: Bash, Terraform >= 1.9 and < 2.0, and access to the locked AWS provider package. For the walkthrough: AWS CLI, kubectl, Helm 3, an existing EKS cluster with its IAM OIDC provider, an approved deployment identity with permission to create, read (including `secretsmanager:GetSecretValue`), update and delete the dedicated demo secret and its value version, and manage the reader IAM resources in the same AWS account and region. A customer-managed KMS key must allow the deployment identity to encrypt and decrypt through Secrets Manager, and the reader role to decrypt.
 
 Confirm ownership of the fixed namespaces, IAM role and Helm release before creating anything. An existing ESO installation or shared CRDs need administrator coordination; RBAC permissions from other bindings remain additive.
 
 ## Layout
 
 - [`example/README.md`](example/README.md): configuration and walkthrough sequence; run its commands from `example/`.
-- `example/terraform/`: reader role, scoped policy, dependency lock and mock-provider tests. Terraform manages no secret values.
+- `example/terraform/`: demo secret and public dummy value, reader role, scoped policy, dependency lock and mock-provider tests.
 - `example/eso-values.yaml`: scoped controller and explicit CRD retention.
 - `example/{namespaces,store,externalsecret,consumer}.yaml`: namespaces, IRSA reader identity, secret mapping and consumption probe.
 - `example/commands/`: separate setup, observation and cleanup snippets. No GitHub Actions workflows are included.
@@ -45,11 +45,11 @@ Local validation does not exercise AWS authorization, Kubernetes admission or li
 
 ## Usage and cleanup
 
-Follow the [sample sequence](example/README.md) in one terminal, running commands individually and stopping on failure. Set the intended AWS identity and Kubernetes context, replace every example ARN consistently, and inspect each saved Terraform plan before its separate apply step. The `commands/` files contain live changes; do not execute them as a batch.
+Follow the [sample sequence](example/README.md) in one terminal, running commands individually and stopping on failure. Set the intended AWS identity and Kubernetes context, use the Terraform outputs for the reader-role and source-secret ARNs, and inspect each saved Terraform plan before its separate apply step. The `commands/` files contain live changes; do not execute them as a batch.
 
-Use only the supplied public dummy values with the dedicated demo secret. Keep real values, credentials, state, plans and local variable files out of Git; retain the provider lock. The consumer compares values without printing them. Allow time for ESO refresh and volume projection. Existing environment variables are not updated in place; restart the container or replace the Pod to receive the new value.
+Use only the supplied public dummy values with the dedicated demo secret. Terraform stores the demo value in state. Keep real values, credentials, state, plans and local variable files out of Git; retain the provider lock. The consumer compares values without printing them. Allow time for ESO refresh and volume projection. Existing environment variables are not updated in place; restart the container or replace the Pod to receive the new value.
 
-Cleanup removes the dedicated consumer, secret mapping, reader identity and Helm release, then prepares an IAM destroy plan for inspection before apply. CRDs and namespaces remain for administrator inspection. The cluster, OIDC provider, source secret and optional KMS key are not created or deleted by this sample. Retained CRDs require explicit ownership decisions before a later installation.
+Cleanup removes the dedicated consumer, secret mapping, reader identity and Helm release, then prepares a destroy plan for the demo secret, managed version and IAM resources for inspection before apply. CRDs and namespaces remain for administrator inspection. The cluster, OIDC provider and optional KMS key are not created or deleted by this sample. Secret deletion uses a 30-day recovery window; its name cannot be reused until deletion completes. Choose another demo name to repeat sooner. Retained CRDs require explicit ownership decisions before a later installation.
 
 ## Upstream references
 

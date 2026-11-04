@@ -35,15 +35,6 @@ variable "oidc_provider_arn" {
   }
 }
 
-variable "secret_arn" {
-  description = "Full ARN, including generated suffix, of the owner-managed demo secret."
-  type        = string
-  validation {
-    condition     = can(regex("^arn:aws:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:[A-Za-z0-9/_+=.@-]+-[A-Za-z0-9]{6}$", var.secret_arn))
-    error_message = "Use one complete Secrets Manager secret ARN, without wildcards."
-  }
-}
-
 variable "kms_key_arn" {
   description = "Optional customer-managed key ARN; null for aws/secretsmanager."
   type        = string
@@ -52,6 +43,23 @@ variable "kms_key_arn" {
     condition     = var.kms_key_arn == null ? true : can(regex("^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[A-Za-z0-9-]+$", var.kms_key_arn))
     error_message = "Use a complete KMS key ARN, not an alias or wildcard."
   }
+}
+
+variable "demo_api_key" {
+  description = "Public dummy value for the propagation exercise; never a real credential."
+  type        = string
+  default     = "demo-only-v1"
+}
+
+resource "aws_secretsmanager_secret" "demo" {
+  name                    = "shop/demo/checkout"
+  kms_key_id              = var.kms_key_arn
+  recovery_window_in_days = 30
+}
+
+resource "aws_secretsmanager_secret_version" "demo" {
+  secret_id     = aws_secretsmanager_secret.demo.id
+  secret_string = jsonencode({ apiKey = var.demo_api_key })
 }
 
 locals {
@@ -81,10 +89,9 @@ resource "aws_iam_role" "reader" {
       condition = (
         split(":", var.oidc_provider_arn)[4] == var.aws_account_id &&
         startswith(local.oidc_issuer, "oidc.eks.${var.aws_region}.amazonaws.com/") &&
-        startswith(var.secret_arn, "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:") &&
         (var.kms_key_arn == null ? true : startswith(var.kms_key_arn, "arn:aws:kms:${var.aws_region}:${var.aws_account_id}:key/"))
       )
-      error_message = "OIDC provider, secret and optional KMS key must belong to the intended account and region."
+      error_message = "OIDC provider and optional KMS key must belong to the intended account and region."
     }
   }
 }
@@ -98,7 +105,7 @@ resource "aws_iam_role_policy" "reader" {
       {
         Effect   = "Allow"
         Action   = ["secretsmanager:GetSecretValue"]
-        Resource = var.secret_arn
+        Resource = aws_secretsmanager_secret.demo.arn
       }
       ], var.kms_key_arn == null ? [] : [{
         Effect   = "Allow"
@@ -107,11 +114,15 @@ resource "aws_iam_role_policy" "reader" {
         Condition = {
           StringEquals = {
             "kms:ViaService"                  = "secretsmanager.${var.aws_region}.amazonaws.com"
-            "kms:EncryptionContext:SecretARN" = var.secret_arn
+            "kms:EncryptionContext:SecretARN" = aws_secretsmanager_secret.demo.arn
           }
         }
     }])
   })
+}
+
+output "secret_arn" {
+  value = aws_secretsmanager_secret.demo.arn
 }
 
 output "reader_role_arn" {
