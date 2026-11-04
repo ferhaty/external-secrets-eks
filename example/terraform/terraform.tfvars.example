@@ -1,4 +1,4 @@
-aws_region        = "eu-west-1"
+aws_region        = "us-east-1"
 aws_account_id    = "111122223333"
-oidc_provider_arn = "arn:aws:iam::111122223333:oidc-provider/oidc.eks.eu-west-1.amazonaws.com/id/EXAMPLE123"
-secret_arn        = "arn:aws:secretsmanager:eu-west-1:111122223333:secret:shop/demo/checkout-AbCdEf"
+oidc_provider_arn = "arn:aws:iam::111122223333:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/EXAMPLE123"
+secret_arn        = "arn:aws:secretsmanager:us-east-1:111122223333:secret:shop/demo/checkout-AbCdEf"

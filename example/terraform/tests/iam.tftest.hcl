@@ -1,9 +1,9 @@
 mock_provider "aws" {}
 variables {
-  aws_region        = "eu-west-1"
+  aws_region        = "us-east-1"
   aws_account_id    = "111122223333"
-  oidc_provider_arn = "arn:aws:iam::111122223333:oidc-provider/oidc.eks.eu-west-1.amazonaws.com/id/EXAMPLE123"
-  secret_arn        = "arn:aws:secretsmanager:eu-west-1:111122223333:secret:shop/demo/checkout-AbCdEf"
+  oidc_provider_arn = "arn:aws:iam::111122223333:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/EXAMPLE123"
+  secret_arn        = "arn:aws:secretsmanager:us-east-1:111122223333:secret:shop/demo/checkout-AbCdEf"
 }
 run "scoped_read_and_trust" {
   command = plan
@@ -23,7 +23,7 @@ run "scoped_read_and_trust" {
 run "customer_key" {
   command = plan
   variables {
-    kms_key_arn = "arn:aws:kms:eu-west-1:111122223333:key/00000000-0000-0000-0000-000000000000"
+    kms_key_arn = "arn:aws:kms:us-east-1:111122223333:key/00000000-0000-0000-0000-000000000000"
   }
   assert {
     condition     = length(jsondecode(aws_iam_role_policy.reader.policy).Statement) == 2 && jsondecode(aws_iam_role_policy.reader.policy).Statement[1].Resource == var.kms_key_arn && jsondecode(aws_iam_role_policy.reader.policy).Statement[1].Condition.StringEquals["kms:EncryptionContext:SecretARN"] == var.secret_arn
@@ -33,13 +33,13 @@ run "customer_key" {
 run "foreign_oidc_rejected" {
   command = plan
   variables {
-    oidc_provider_arn = "arn:aws:iam::444455556666:oidc-provider/oidc.eks.eu-west-1.amazonaws.com/id/OTHER"
+    oidc_provider_arn = "arn:aws:iam::444455556666:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/OTHER"
   }
   expect_failures = [aws_iam_role.reader]
 }
 run "wildcard_secret_rejected" {
   command = plan
-  variables { secret_arn = "arn:aws:secretsmanager:eu-west-1:111122223333:secret:*" }
+  variables { secret_arn = "arn:aws:secretsmanager:us-east-1:111122223333:secret:*" }
   expect_failures = [var.secret_arn]
 }
 run "mock_apply" {
