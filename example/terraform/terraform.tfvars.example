@@ -1,4 +1,3 @@
 aws_region        = "us-east-1"
 aws_account_id    = "111122223333"
 oidc_provider_arn = "arn:aws:iam::111122223333:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/EXAMPLE123"
-demo_api_key      = "demo-only-v1"
