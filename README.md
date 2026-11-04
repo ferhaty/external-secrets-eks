@@ -47,7 +47,7 @@ Local validation does not exercise AWS authorization, Kubernetes admission or li
 
 Follow the [sample sequence](example/README.md) in one terminal, running commands individually and stopping on failure. Set the intended AWS identity and Kubernetes context, replace every example ARN consistently, and inspect each saved Terraform plan before its separate apply step. The `commands/` files contain live changes; do not execute them as a batch.
 
-Use only the supplied public dummy values with the dedicated demo secret. Keep real values, credentials, state, plans and local variable files out of Git; retain the provider lock. The consumer compares values without printing them. Allow time for ESO refresh and volume projection; existing environment variables change only when the Pod is replaced.
+Use only the supplied public dummy values with the dedicated demo secret. Keep real values, credentials, state, plans and local variable files out of Git; retain the provider lock. The consumer compares values without printing them. Allow time for ESO refresh and volume projection. Existing environment variables are not updated in place; restart the container or replace the Pod to receive the new value.
 
 Cleanup removes the dedicated consumer, secret mapping, reader identity and Helm release, then prepares an IAM destroy plan for inspection before apply. CRDs and namespaces remain for administrator inspection. The cluster, OIDC provider, source secret and optional KMS key are not created or deleted by this sample. Retained CRDs require explicit ownership decisions before a later installation.
 
